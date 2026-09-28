@@ -45,17 +45,21 @@ export type PageLayout = (typeof PAGE_LAYOUTS)[number];
 export const ASPECT_RATIOS = ["portrait", "landscape", "square", "wide"] as const;
 export type AspectRatio = (typeof ASPECT_RATIOS)[number];
 
+/** Free-first text providers. horde + pollinations need no key. */
 export const TEXT_PROVIDERS = [
   "horde",
+  "pollinations",
   "grok",
+  "groq",
+  "deepseek",
   "openrouter",
   "gemini",
-  "pollinations",
   "openai",
 ] as const;
 export type TextProvider = (typeof TEXT_PROVIDERS)[number];
 
-export const IMAGE_PROVIDERS = ["horde", "grok", "pollinations"] as const;
+/** Free-first image providers. horde + pollinations need no key. */
+export const IMAGE_PROVIDERS = ["horde", "pollinations", "grok"] as const;
 export type ImageProvider = (typeof IMAGE_PROVIDERS)[number];
 
 export const LOCKABLE_ATTRS = [
@@ -81,6 +85,27 @@ export type ContinuityWarning = {
   resolution: "canon" | "scene" | "edit" | "ignore" | "open";
 };
 
+export type CharacterReferenceImage = {
+  id: string;
+  dataUrl: string;
+  label: string;
+};
+
+export type CharacterExternalLink = {
+  id: string;
+  platform:
+    | "chub"
+    | "spicychat"
+    | "characterai"
+    | "crush"
+    | "shapes"
+    | "tavern"
+    | "janitor"
+    | "other";
+  url: string;
+  label: string;
+};
+
 export type Character = {
   id: string;
   name: string;
@@ -104,7 +129,24 @@ export type Character = {
   visualIdentifiers: string;
   locks: Partial<Record<LockableAttr, boolean>>;
   notes: string;
-  source: "manuscript" | "user";
+  source: "manuscript" | "user" | "import";
+  /** Primary portrait / card avatar (data URL). */
+  avatarDataUrl?: string;
+  /** Extra reference plates for consistency. */
+  referenceImages?: CharacterReferenceImage[];
+  /** Optional links to Chub, SpicyChat, Character.AI, etc. */
+  externalLinks?: CharacterExternalLink[];
+};
+
+export type LorebookEntry = {
+  id: string;
+  name: string;
+  keys: string[];
+  content: string;
+  enabled: boolean;
+  priority: number;
+  /** Empty = applies to whole project; otherwise only when those characters are in scene. */
+  linkedCharacterIds: string[];
 };
 
 export type StoryLocation = {
@@ -279,6 +321,8 @@ export type Project = {
   locations: StoryLocation[];
   objects: StoryObject[];
   timeline: TimelineEvent[];
+  /** World-info / lorebook entries imported from cards or JSON. */
+  lorebook: LorebookEntry[];
   style: ArtStyle;
   storyboard: Scene[];
   pages: BookPage[];
@@ -307,4 +351,8 @@ export type OptionalKeys = {
   openai?: string;
   pollinations?: string;
   horde?: string;
+  /** Free-tier key from console.groq.com */
+  groq?: string;
+  /** Free-tier key from platform.deepseek.com */
+  deepseek?: string;
 };
