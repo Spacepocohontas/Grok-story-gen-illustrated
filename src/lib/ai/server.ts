@@ -205,6 +205,38 @@ export const generateTextComplete = createServerFn({ method: "POST" })
         const text = await xaiChat(prompt, data.maxTokens ?? 3500);
         return { ok: true as const, kind: "complete" as const, text, provider: "grok" };
       }
+      if (provider === "groq") {
+        const key = keys?.groq;
+        if (!key) {
+          return {
+            ok: false as const,
+            error: "Add a free Groq key from console.groq.com in Settings, or switch to AI Horde / Pollinations (no key).",
+          };
+        }
+        const text = await openAiCompat({
+          key,
+          base: "https://api.groq.com/openai/v1",
+          model: "llama-3.3-70b-versatile",
+          prompt,
+        });
+        return { ok: true as const, kind: "complete" as const, text, provider: "groq" };
+      }
+      if (provider === "deepseek") {
+        const key = keys?.deepseek;
+        if (!key) {
+          return {
+            ok: false as const,
+            error: "Add a free DeepSeek key from platform.deepseek.com in Settings, or switch to AI Horde / Pollinations (no key).",
+          };
+        }
+        const text = await openAiCompat({
+          key,
+          base: "https://api.deepseek.com",
+          model: "deepseek-chat",
+          prompt,
+        });
+        return { ok: true as const, kind: "complete" as const, text, provider: "deepseek" };
+      }
       if (provider === "openai") {
         const key = keys?.openai;
         if (!key) return { ok: false as const, error: "Add an OpenAI key in Settings, or switch to AI Horde (no key)." };
