@@ -2,7 +2,15 @@ import type { OptionalKeys } from "./types";
 
 const PREFIX = "storybook-gen-key:";
 
-const FIELDS = ["openrouter", "gemini", "openai", "pollinations", "horde"] as const;
+const FIELDS = [
+  "openrouter",
+  "gemini",
+  "openai",
+  "pollinations",
+  "horde",
+  "groq",
+  "deepseek",
+] as const;
 
 export function loadKeys(): OptionalKeys {
   if (typeof sessionStorage === "undefined") return {};
