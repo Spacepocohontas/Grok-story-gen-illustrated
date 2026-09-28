@@ -49,6 +49,9 @@ export function emptyCharacter(name = ""): Character {
     },
     notes: "",
     source: "user",
+    avatarDataUrl: undefined,
+    referenceImages: [],
+    externalLinks: [],
   };
 }
 
@@ -73,6 +76,7 @@ export function createProject(partial?: Partial<Project>): Project {
     locations: [],
     objects: [],
     timeline: [],
+    lorebook: [],
     style: defaultStyle(),
     storyboard: [],
     pages: [],
