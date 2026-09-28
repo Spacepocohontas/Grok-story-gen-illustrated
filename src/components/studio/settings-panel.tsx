@@ -18,11 +18,15 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     setKeys(loadKeys());
-    void listHordeModels().then((m) => {
-      setTextModels(m.textModels);
-      setImageModels(m.imageModels);
-    }).catch(() => {});
-    void getAiCapabilities().then(setGrok).catch(() => {});
+    void listHordeModels()
+      .then((m) => {
+        setTextModels(m.textModels);
+        setImageModels(m.imageModels);
+      })
+      .catch(() => {});
+    void getAiCapabilities()
+      .then(setGrok)
+      .catch(() => {});
   }, []);
 
   if (!project) return null;
@@ -46,11 +50,11 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
             Studio settings
           </h2>
           <p className="mt-2 text-sm text-muted">
-            Default is AI Horde with no key. Optional keys stay in this browser session and are sent only to the matching provider when you generate. Session storage is not absolute security.
+            Free-first by default: AI Horde and Pollinations need no key. Optional free-tier keys (Groq, DeepSeek, Gemini) and paid keys stay in this browser session and are only sent to the matching provider when you generate.
           </p>
         </div>
 
-        <Field label="Text assistant">
+        <Field label="Text assistant" hint="No-key options first, then free-tier keys, then paid.">
           <NativeSelect
             value={project.settings.textProvider}
             onChange={(e) =>
@@ -59,16 +63,18 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               })
             }
           >
-            <option value="horde">AI Horde — no API key</option>
+            <option value="horde">AI Horde — free, no key</option>
+            <option value="pollinations">Pollinations — free, no key</option>
             {grok.grokText ? <option value="grok">Grok (included)</option> : null}
-            <option value="pollinations">Pollinations</option>
+            <option value="groq">Groq — free tier key</option>
+            <option value="deepseek">DeepSeek — free tier key</option>
+            <option value="gemini">Gemini — free tier key</option>
             <option value="openrouter">OpenRouter (optional key)</option>
-            <option value="gemini">Gemini (optional key)</option>
             <option value="openai">OpenAI (optional key)</option>
           </NativeSelect>
         </Field>
 
-        <Field label="Illustration">
+        <Field label="Illustration" hint="Horde + Pollinations work with no key.">
           <NativeSelect
             value={project.settings.imageProvider}
             onChange={(e) =>
@@ -77,9 +83,9 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               })
             }
           >
-            <option value="horde">AI Horde — no API key</option>
+            <option value="horde">AI Horde — free, no key</option>
+            <option value="pollinations">Pollinations — free, no key</option>
             {grok.grokImage ? <option value="grok">Grok Imagine (included)</option> : null}
-            <option value="pollinations">Pollinations</option>
           </NativeSelect>
         </Field>
 
@@ -121,12 +127,17 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
 
         <div className="space-y-3">
           <p className="text-sm font-medium text-muted">Optional keys (this session only)</p>
+          <p className="text-xs text-subtle">
+            Free tiers: Groq (console.groq.com), DeepSeek (platform.deepseek.com), Gemini (aistudio.google.com). Paid: OpenRouter, OpenAI. Horde key only raises queue priority.
+          </p>
           {(
             [
+              ["groq", "Groq (free tier)"],
+              ["deepseek", "DeepSeek (free tier)"],
+              ["gemini", "Gemini (free tier)"],
               ["openrouter", "OpenRouter"],
-              ["gemini", "Gemini"],
               ["openai", "OpenAI"],
-              ["pollinations", "Pollinations"],
+              ["pollinations", "Pollinations (optional)"],
               ["horde", "AI Horde (optional, raises priority)"],
             ] as const
           ).map(([k, label]) => (
