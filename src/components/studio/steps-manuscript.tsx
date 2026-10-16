@@ -1,3 +1,4 @@
+import { DOCUMENT_ACCEPT } from "@/lib/documents";
 import { FileUp, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -18,7 +19,7 @@ export function ManuscriptStep() {
 
   async function onFiles(files: FileList | null) {
     const file = files?.[0];
-    if (!file) return;
+    if (!file || busy) return;
     setBusy(true);
     try {
       const result = await ingestFile(file);
@@ -40,7 +41,7 @@ export function ManuscriptStep() {
         <p className="text-xs tracking-[0.18em] text-muted uppercase">Source of truth</p>
         <h1 className="mt-1 font-display text-3xl md:text-4xl">Upload the manuscript</h1>
         <p className="mt-2 max-w-2xl text-muted">
-          TXT, Markdown, DOC, DOCX, and PDF. The uploaded text is canon. Generation cannot quietly replace it.
+          TXT, Markdown, DOCX, PDF, EPUB, ODT, RTF, HTML, JSON, and CSV. The uploaded text is canon. Generation cannot quietly replace it.
         </p>
       </div>
 
@@ -67,7 +68,8 @@ export function ManuscriptStep() {
         <input
           type="file"
           className="sr-only"
-          accept=".pdf,.doc,.docx,.txt,.md,.markdown,.rtf,.html"
+          accept={DOCUMENT_ACCEPT}
+          disabled={busy}
           onChange={(e) => void onFiles(e.target.files)}
         />
       </label>

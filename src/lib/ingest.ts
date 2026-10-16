@@ -1,3 +1,4 @@
+import { readDocument } from "./documents";
 export type IngestResult = {
   text: string;
   format: string;
@@ -8,17 +9,6 @@ export type IngestResult = {
 };
 
 const MAX_BYTES = 12 * 1024 * 1024;
-
-function isOleDoc(buf: ArrayBuffer): boolean {
-  const u = new Uint8Array(buf.slice(0, 8));
-  return (
-    u.length >= 8 &&
-    u[0] === 0xd0 &&
-    u[1] === 0xcf &&
-    u[2] === 0x11 &&
-    u[3] === 0xe0
-  );
-}
 
 async function extractPdf(data: ArrayBuffer): Promise<{ text: string; pages: number; scanned: boolean; notes: string[] }> {
   const pdfjs = await import("pdfjs-dist");
@@ -42,7 +32,7 @@ async function extractPdf(data: ArrayBuffer): Promise<{ text: string; pages: num
     else text += `\n\n[Page ${i}]\n${pageText}`;
   }
 
-  const scanned = doc.numPages > 0 && (text.trim().length < 40 || emptyPages / doc.numPages > 0.6);
+  const scanned = doc.numPages > 0 && (!text.trim().length || emptyPages / doc.numPages > 0.6);
   if (scanned) {
     notes.push(
       "This PDF looks image-only or scanned. Selectable text was missing or nearly empty, so OCR is needed. Paste the text, or export a text-based PDF.",
@@ -59,24 +49,19 @@ export async function ingestFile(file: File): Promise<IngestResult> {
   if (file.size > MAX_BYTES) {
     throw new Error("That file is larger than 12 MB. Split the manuscript or export a smaller copy.");
   }
+  if (!file.size) throw new Error("Choose a non-empty document. The manuscript was not changed.");
   const name = file.name;
   const lower = name.toLowerCase();
   const notes: string[] = [];
 
-  if (lower.endsWith(".txt") || lower.endsWith(".md") || lower.endsWith(".markdown") || lower.endsWith(".html") || lower.endsWith(".rtf")) {
-    const text = await file.text();
-    if (lower.endsWith(".rtf")) {
-      notes.push("RTF was read as raw text. Some control words may remain — clean them in the editor if needed.");
-    }
-    if (lower.endsWith(".html")) {
-      notes.push("HTML tags were kept. You can clean the manuscript in the editor.");
-    }
-    return { text, format: lower.split(".").pop() || "txt", filename: name, scanned: false, notes };
+  if (/\.(txt|md|markdown|html?|rtf|epub|odt|json|csv|tsv|xml|ya?ml|log|srt|vtt)$/.test(lower)) {
+    return { text: await readDocument(file), format: lower.split('.').pop() || 'txt', filename: name, scanned: false, notes: ['Document text was extracted in your browser. Review the manuscript before analysis.'] };
   }
 
   if (lower.endsWith(".docx")) {
     const mammoth = await import("mammoth");
     const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+    if (!result.value.trim()) throw new Error("No readable text was found in this DOCX. The manuscript was not changed.");
     if (result.messages.length) {
       notes.push(...result.messages.map((m) => m.message));
     }
@@ -84,20 +69,11 @@ export async function ingestFile(file: File): Promise<IngestResult> {
     return { text: result.value, format: "docx", filename: name, scanned: false, notes };
   }
 
-  if (lower.endsWith(".doc")) {
-    const buf = await file.arrayBuffer();
-    if (isOleDoc(buf)) {
-      throw new Error(
-        "This is a legacy .doc Word file. Save or export it as .docx or .txt, then upload again. The manuscript was not changed.",
-      );
-    }
-    const text = await file.text();
-    notes.push("The .doc file was read as plain text. If the result looks garbled, export as DOCX.");
-    return { text, format: "doc", filename: name, scanned: false, notes };
-  }
+  if (lower.endsWith('.doc')) throw new Error('Legacy DOC files need conversion. Save as DOCX, PDF or TXT, then import again. The manuscript was not changed.');
 
   if (lower.endsWith(".pdf")) {
     const pdf = await extractPdf(await file.arrayBuffer());
+    if (!pdf.text.trim()) throw new Error("This PDF has no selectable text. Run OCR first, then import it again. The manuscript was not changed.");
     return {
       text: pdf.text,
       format: "pdf",
@@ -108,7 +84,7 @@ export async function ingestFile(file: File): Promise<IngestResult> {
     };
   }
 
-  throw new Error("Use TXT, Markdown, DOC, DOCX, or PDF. EPUB and ZIP collections are not available yet.");
+  throw new Error("Use TXT, Markdown, PDF, DOCX, EPUB, ODT, RTF, HTML, JSON or CSV. Legacy DOC and encrypted files need conversion first.");
 }
 
 export function ingestPasted(text: string): IngestResult {

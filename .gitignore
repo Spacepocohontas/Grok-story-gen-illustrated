@@ -12,3 +12,5 @@ dist
 screenshots
 artifacts
 routeTree.gen.ts
+
+.grok/preview.pid

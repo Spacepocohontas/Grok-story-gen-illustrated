@@ -24,3 +24,10 @@ npm run dev
 ```
 
 Projects are stored in the browser (IndexedDB). Nothing is uploaded until you press a generate action.
+
+
+### Document import
+
+Import selectable-text PDF, DOCX, TXT, Markdown, EPUB, ODT, RTF, HTML, JSON, CSV, and other common text files. Extraction runs locally using bundled readers and a local PDF worker. Review the extracted text before continuing. Unsupported files, legacy DOC, and scanned PDFs without selectable text produce conversion/OCR guidance; a failed import preserves the previous manuscript.
+
+Specialized character-card (PNG, WebP, JSON, CHARX), lore, and reference-image import remain separate from manuscript import.
